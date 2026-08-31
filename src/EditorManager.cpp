@@ -47,9 +47,11 @@ const int MARK_HIDELINESUNDERLINE = 21;
 EditorManager::EditorManager(ApplicationSettings *settings, QObject *parent)
     : QObject(parent), settings(settings)
 {
+
 	fileWatcher = new QFileSystemWatcher(this);
 
     connect(fileWatcher, &QFileSystemWatcher::fileChanged, this, [=, this](const QString &path) {
+
         // Debounce: a single external write commonly fires this signal 2+
         // times in a row. Only arm one timer per path; further signals
         // received before it fires are simply dropped.
@@ -63,6 +65,25 @@ EditorManager::EditorManager(ApplicationSettings *settings, QObject *parent)
             pendingFileChanges.remove(path);
             processExternalFileChange(path);
         });
+    });
+	
+    connect(this, &EditorManager::editorCreated, this, [=](ScintillaNext *editor) {
+        connect(editor, &ScintillaNext::closed, this, [=]() {
+            emit editorClosed(editor);
+        });
+
+        connect(editor, &ScintillaNext::closed, this, [=]() {
+            unwatchEditorFile(editor);
+        });
+
+        // Covers "Save As" and renaming a "New" buffer into an actual file,
+        // in addition to a plain rename - fileInfo is already up to date
+        // by the time this signal fires.
+        connect(editor, &ScintillaNext::renamed, this, [=]() {
+            watchEditorFile(editor);
+        });
+
+        watchEditorFile(editor);
     });
 	
     connect(this, &EditorManager::editorCreated, this, [=, this](ScintillaNext *editor) {
