@@ -67,8 +67,8 @@ EditorManager::EditorManager(ApplicationSettings *settings, QObject *parent)
         });
     });
 	
-    connect(this, &EditorManager::editorCreated, this, [=](ScintillaNext *editor) {
-        connect(editor, &ScintillaNext::closed, this, [=]() {
+    connect(this, &EditorManager::editorCreated, this, [=, this](ScintillaNext *editor) {
+        connect(editor, &ScintillaNext::closed, this, [=, this]() {
             emit editorClosed(editor);
         });
 
