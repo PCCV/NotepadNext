@@ -67,6 +67,25 @@ EditorManager::EditorManager(ApplicationSettings *settings, QObject *parent)
         });
     });
 	
+    connect(this, &EditorManager::editorCreated, this, [=](ScintillaNext *editor) {
+        connect(editor, &ScintillaNext::closed, this, [=]() {
+            emit editorClosed(editor);
+        });
+
+        connect(editor, &ScintillaNext::closed, this, [=]() {
+            unwatchEditorFile(editor);
+        });
+
+        // Covers "Save As" and renaming a "New" buffer into an actual file,
+        // in addition to a plain rename - fileInfo is already up to date
+        // by the time this signal fires.
+        connect(editor, &ScintillaNext::renamed, this, [=]() {
+            watchEditorFile(editor);
+        });
+
+        watchEditorFile(editor);
+    });
+	
     connect(this, &EditorManager::editorCreated, this, [=, this](ScintillaNext *editor) {
         connect(editor, &ScintillaNext::closed, this, [=, this]() {
             emit editorClosed(editor);
