@@ -49,7 +49,7 @@ EditorManager::EditorManager(ApplicationSettings *settings, QObject *parent)
 {
     fileWatcher = new QFileSystemWatcher(this);
 
-    connect(fileWatcher, &QFileSystemWatcher::fileChanged, this, [=](const QString &path) {
+    connect(fileWatcher, &QFileSystemWatcher::fileChanged, this, [=, this](const QString &path) {
         // Debounce: a single external write commonly fires this signal 2+
         // times in a row. Only arm one timer per path; further signals
         // received before it fires are simply dropped.
@@ -65,33 +65,33 @@ EditorManager::EditorManager(ApplicationSettings *settings, QObject *parent)
         });
     });
 
-    connect(this, &EditorManager::editorCreated, this, [=](ScintillaNext *editor) {
-        connect(editor, &ScintillaNext::closed, this, [=]() {
+    connect(this, &EditorManager::editorCreated, this, [=, this](ScintillaNext *editor) {
+		connect(editor, &ScintillaNext::closed, this, [=, this]() {
             emit editorClosed(editor);
         });
 
-        connect(editor, &ScintillaNext::closed, this, [=]() {
+        connect(editor, &ScintillaNext::closed, this, [=, this]() {
             unwatchEditorFile(editor);
         });
 
         // Covers "Save As" and renaming a "New" buffer into an actual file,
         // in addition to a plain rename - fileInfo is already up to date
         // by the time this signal fires.
-        connect(editor, &ScintillaNext::renamed, this, [=]() {
+        connect(editor, &ScintillaNext::renamed, this, [=, this]() {
             watchEditorFile(editor);
         });
 
         watchEditorFile(editor);
     });
 
-    connect(settings, &ApplicationSettings::showWrapSymbolChanged, this, [=](bool b) {
+    connect(settings, &ApplicationSettings::showWrapSymbolChanged, this, [=, this](bool b) {
         for (auto &editor : getEditors()) {
             editor->setWrapVisualFlags(b ? SC_WRAPVISUALFLAG_END : SC_WRAPVISUALFLAG_NONE);
         }
     });
 
 
-    connect(settings, &ApplicationSettings::showWhitespaceChanged, this, [=](bool b) {
+    connect(settings, &ApplicationSettings::showWhitespaceChanged, this, [=, this](bool b) {
         // TODO: could make SCWS_VISIBLEALWAYS configurable via settings. Probably not worth
         // taking up menu space e.g. show all, show leading, show trailing
         for (auto &editor : getEditors()) {
@@ -99,19 +99,19 @@ EditorManager::EditorManager(ApplicationSettings *settings, QObject *parent)
         }
     });
 
-    connect(settings, &ApplicationSettings::showEndOfLineChanged, this, [=](bool b) {
+    connect(settings, &ApplicationSettings::showEndOfLineChanged, this, [=, this](bool b) {
         for (auto &editor : getEditors()) {
             editor->setViewEOL(b);
         }
     });
 
-    connect(settings, &ApplicationSettings::showIndentGuideChanged, this, [=](bool b) {
+    connect(settings, &ApplicationSettings::showIndentGuideChanged, this, [=, this](bool b) {
         for (auto &editor : getEditors()) {
             editor->setIndentationGuides(b ? SC_IV_LOOKBOTH : SC_IV_NONE);
         }
     });
 
-    connect(settings, &ApplicationSettings::wordWrapChanged, this, [=](bool b) {
+    connect(settings, &ApplicationSettings::wordWrapChanged, this, [=, this](bool b) {
         if (b) {
             for (auto &editor : getEditors()) {
                 editor->setWrapMode(SC_WRAP_WORD);
@@ -127,7 +127,7 @@ EditorManager::EditorManager(ApplicationSettings *settings, QObject *parent)
         }
     });
 
-    connect(settings, &ApplicationSettings::fontNameChanged, this, [=](QString fontName){
+    connect(settings, &ApplicationSettings::fontNameChanged, this, [=, this](QString fontName){
         for (auto &editor : getEditors()) {
             for (int i = 0; i <= STYLE_MAX; ++i) {
                 editor->styleSetFont(i, fontName.toUtf8().data());
@@ -135,7 +135,7 @@ EditorManager::EditorManager(ApplicationSettings *settings, QObject *parent)
         }
     });
 
-    connect(settings, &ApplicationSettings::fontSizeChanged, this, [=](int fontSize){
+    connect(settings, &ApplicationSettings::fontSizeChanged, this, [=, this](int fontSize){
         for (auto &editor : getEditors()) {
             for (int i = 0; i <= STYLE_MAX; ++i) {
                 editor->styleSetSize(i, fontSize);
@@ -143,7 +143,7 @@ EditorManager::EditorManager(ApplicationSettings *settings, QObject *parent)
         }
     });
 
-    connect(settings, &ApplicationSettings::urlHighlightingChanged, this, [=](bool b){
+    connect(settings, &ApplicationSettings::urlHighlightingChanged, this, [=, this](bool b){
         for (auto &editor : getEditors()) {
             URLFinder *decorator = editor->findChild<URLFinder *>(QString(), Qt::FindDirectChildrenOnly);
             if (decorator) {
@@ -152,7 +152,7 @@ EditorManager::EditorManager(ApplicationSettings *settings, QObject *parent)
         }
     });
 
-    connect(settings, &ApplicationSettings::showLineNumbersChanged, this, [=](bool b){
+    connect(settings, &ApplicationSettings::showLineNumbersChanged, this, [=, this](bool b){
         for (auto &editor : getEditors()) {
             LineNumbers *decorator = editor->findChild<LineNumbers *>(QString(), Qt::FindDirectChildrenOnly);
             if (decorator) {
@@ -161,7 +161,7 @@ EditorManager::EditorManager(ApplicationSettings *settings, QObject *parent)
         }
     });
 
-    connect(settings, &ApplicationSettings::autoCompletionChanged, this, [=](bool b){
+    connect(settings, &ApplicationSettings::autoCompletionChanged, this, [=, this](bool b){
         for (auto &editor : getEditors()) {
             AutoCompletion *decorator = editor->findChild<AutoCompletion *>(QString(), Qt::FindDirectChildrenOnly);
             if (decorator) {
