@@ -1040,7 +1040,7 @@ MainWindow::MainWindow(NotepadNextApplication *app) :
     // ---------- Function list (attached inside the editor, not a dock) ----------
     ctagsManager = new CtagsSymbolManager(this);
 
-    functionListAction = ui->menuView->addAction(tr("函数列表"));
+    functionListAction = ui->menuView->addAction(tr("Functions list"));
     functionListAction->setCheckable(true);
     functionListAction->setChecked(app->getSettings()->value("FunctionList/Visible", true).toBool());
     functionListAction->setObjectName(QStringLiteral("actionFunctionList"));
