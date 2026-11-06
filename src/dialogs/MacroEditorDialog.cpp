@@ -149,7 +149,7 @@ void MacroEditorDialog::copyCurrentMacro()
 
         newMacro->setName(originalMacro->getName() + " " + tr("(Copy)"));
 
-        for (const MacroStep &step : qAsConst(originalMacro->getSteps())) {
+        for (const MacroStep &step : std::as_const(originalMacro->getSteps())) {
             newMacro->addMacroStep(step);
         }
 

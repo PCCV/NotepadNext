@@ -153,7 +153,7 @@ void EditorInspectorDock::editorUIUpdated(Scintilla::Update updated)
 
 void EditorInspectorDock::updateEditorInfo(ScintillaNext *editor)
 {
-    for (const QPair<QTreeWidgetItem *, EditorFunction> &pair : qAsConst(items)) {
+    for (const QPair<QTreeWidgetItem *, EditorFunction> &pair : std::as_const(items)) {
         QTreeWidgetItem *item = pair.first;
 
         if (item->parent()->isExpanded()) {
